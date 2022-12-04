@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// const deployLog = require('./scripts/deploy.js');
-const getter = require('./scripts/getHash.js');
 const controller = require('./scripts/controller.js');
 
 app.use(cors());
@@ -33,8 +31,6 @@ app.get('/hash/:address/:privateKey', async (req, res) => {
     const address = req.params.address;
     const privateKey = req.params.privateKey;
 
-    console.log("address: " + address);
-    console.log("privateKey: " + privateKey);
     const data = await controller.getLog(privateKey, address);
     res.json({ data });
 });
@@ -44,13 +40,31 @@ app.get('/get-all-contracts/:privateKey', async (req, res) => {
     res.json({ data });
 });
 
+app.post('/set-driver-diag/:privateKey', async (req, res) => {
+    const data = await controller.setDriverMetrics(
+        req.params.privateKey, 
+        req.body.driverAddress, 
+        req.body.seatbeltEngaged,
+        req.body.breakingIntensity,
+        req.body.averageSpeed,
+        req.body.nonIndicatedTurns,
+        req.body.mileage,
+        req.body.averageFuelConsumption,
+    );
+
+    res.json({ data });
+});
+
+app.get('/get-driver-diag/:privateKey/:driverAddress', async (req, res) => {
+    const data = await controller.getDriverMetrics(
+        req.params.privateKey, 
+        req.params.driverAddress
+    );
+
+    res.json({ data });
+});
+
 app.listen(3000, () => {
     console.log('De-Insure app listening on port 3000!');
 });
 
-function toJson(data) {
-    if (data !== undefined) {
-        return JSON.stringify(data, (_, v) => typeof v === 'bigint' ? `${v}#bigint` : v)
-            .replace(/"(-?\d+)#bigint"/g, (_, a) => a);
-    }
-}
